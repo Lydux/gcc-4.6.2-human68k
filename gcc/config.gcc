@@ -1813,6 +1813,12 @@ m68k-*-rtems*)
 	tm_defines="${tm_defines} MOTOROLA=1"
 	extra_parts="crtbegin.o crtend.o"
 	;;
+m68k-*-human68k*)
+	default_m68k_cpu=68000
+	tm_file="${tm_file} m68k/m68k-none.h m68k/m68kelf.h dbxelf.h elfos.h newlib-stdint.h m68k/m68kemb.h"
+	m_defines="${tm_defines} MOTOROLA=1"
+	tmake_file="m68k/t-floatlib m68k/t-m68kbare m68k/t-m68kelf"
+	;;
 mcore-*-elf)
 	tm_file="dbxelf.h elfos.h newlib-stdint.h ${tm_file} mcore/mcore-elf.h"
 	tmake_file=mcore/t-mcore

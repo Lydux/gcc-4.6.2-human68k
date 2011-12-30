@@ -4850,7 +4850,10 @@ print_operand_address (FILE *file, rtx addr)
 	      /* Print the ",index" component, if any.  */
 	      if (address.index)
 		{
-		  fprintf (file, ",%s:%c",
+		  if (address.offset)
+		    putc (',', file);
+
+		  fprintf (file, "%s:%c",
 			   M68K_REGNAME (REGNO (address.index)),
 			   GET_MODE (address.index) == HImode ? 'w' : 'l');
 		  if (address.scale != 1)

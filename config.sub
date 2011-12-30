@@ -239,6 +239,9 @@ case $os in
 		basic_machine=m68k-atari
 		os=-mint
 		;;
+	-human68k*)
+		os=-human68k
+		;;
 esac
 
 # Decode aliases for certain CPU-COMPANY combinations.
@@ -1317,7 +1320,7 @@ case $os in
 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es*)
+	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -human68k*)
 	# Remember, each alternative MUST END IN *, to match a version number.
 		;;
 	-qnx*)

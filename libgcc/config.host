@@ -172,6 +172,8 @@ case ${host} in
   ;;
 *-*-elf)
   ;;
+*-*-human68k*)
+  ;;
 esac
 
 case ${host} in
@@ -397,6 +399,8 @@ m68k-*-linux*)		# Motorola m68k's running GNU/Linux
 				# aka the GNU/Linux C library 6.
 	;;
 m68k-*-rtems*)
+	;;
+m68k-*-human68k*)
 	;;
 mcore-*-elf)
 	;;
