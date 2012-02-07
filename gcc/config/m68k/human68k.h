@@ -34,6 +34,9 @@ along with GCC; see the file COPYING3.  If not see
 #undef LINK_SPEC
 #define LINK_SPEC "-q"
 
+#undef LIB_SPEC
+#define LIB_SPEC "-lhuman68k -ldos -liocs"
+
 #undef STARTFILE_SPEC
 #define STARTFILE_SPEC "crt0.o%s"
 
