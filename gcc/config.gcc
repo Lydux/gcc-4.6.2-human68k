@@ -1815,7 +1815,7 @@ m68k-*-rtems*)
 	;;
 m68k-*-human68k*)
 	default_m68k_cpu=68000
-	tm_file="${tm_file} m68k/m68k-none.h m68k/m68kelf.h dbxelf.h elfos.h newlib-stdint.h m68k/m68kemb.h"
+	tm_file="${tm_file} m68k/m68k-none.h m68k/m68kelf.h dbxelf.h elfos.h newlib-stdint.h m68k/m68kemb.h m68k/human68k.h"
 	m_defines="${tm_defines} MOTOROLA=1"
 	tmake_file="m68k/t-floatlib m68k/t-m68kbare m68k/t-m68kelf"
 	;;

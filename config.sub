@@ -239,9 +239,6 @@ case $os in
 		basic_machine=m68k-atari
 		os=-mint
 		;;
-	-human68k*)
-		os=-human68k
-		;;
 esac
 
 # Decode aliases for certain CPU-COMPANY combinations.
@@ -694,6 +691,10 @@ case $basic_machine in
 	hppro)
 		basic_machine=hppa1.1-hp
 		os=-proelf
+		;;
+	human68k)
+		basic_machine=m68k-unknown
+		os=-human68k
 		;;
 	i370-ibm* | ibm*)
 		basic_machine=i370-ibm
@@ -1320,7 +1321,8 @@ case $os in
 	      | -os2* | -vos* | -palmos* | -uclinux* | -nucleus* \
 	      | -morphos* | -superux* | -rtmk* | -rtmk-nova* | -windiss* \
 	      | -powermax* | -dnix* | -nx6 | -nx7 | -sei* | -dragonfly* \
-	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* | -human68k*)
+	      | -skyos* | -haiku* | -rdos* | -toppers* | -drops* | -es* \
+	      | -human68k*)
 	# Remember, each alternative MUST END IN *, to match a version number.
 		;;
 	-qnx*)
