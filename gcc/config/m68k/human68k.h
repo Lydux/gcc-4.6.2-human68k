@@ -38,5 +38,5 @@ along with GCC; see the file COPYING3.  If not see
 #define LIB_SPEC "-lhuman68k -ldos -liocs"
 
 #undef STARTFILE_SPEC
-#define STARTFILE_SPEC "crt0.o%s"
+#define STARTFILE_SPEC "crtbegin.o%s"
 
