@@ -35,8 +35,11 @@ along with GCC; see the file COPYING3.  If not see
 #define LINK_SPEC "-q"
 
 #undef LIB_SPEC
-#define LIB_SPEC "-lhuman68k -ldos -liocs"
+#define LIB_SPEC "-lc -ldos -liocs"
 
 #undef STARTFILE_SPEC
-#define STARTFILE_SPEC "crtbegin.o%s"
+#define STARTFILE_SPEC "crt0.o%s"
+
+#undef USER_LABEL_PREFIX
+#define USER_LABEL_PREFIX ""
 
