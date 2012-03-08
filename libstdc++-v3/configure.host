@@ -248,6 +248,9 @@ case "${host_os}" in
   hpux*)
     os_include_dir="os/hpux"
     ;;
+  human68k*)
+    os_include_dir="os/newlib"
+    ;;
   irix6.5*)
     os_include_dir="os/irix/irix6.5"
     atomicity_dir=os/irix
