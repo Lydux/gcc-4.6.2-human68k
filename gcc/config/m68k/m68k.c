@@ -162,6 +162,8 @@ static void m68k_function_arg_advance (CUMULATIVE_ARGS *, enum machine_mode,
 				       const_tree, bool);
 static rtx m68k_function_arg (CUMULATIVE_ARGS *, enum machine_mode,
 			      const_tree, bool);
+
+static unsigned long m68k_get_iocscall_level (tree argument);
 
 
 /* Specify the identification number of the library being built */
@@ -306,6 +308,7 @@ static const struct attribute_spec m68k_attribute_table[] =
   { "interrupt", 0, 0, true,  false, false, m68k_handle_fndecl_attribute },
   { "interrupt_handler", 0, 0, true,  false, false, m68k_handle_fndecl_attribute },
   { "interrupt_thread", 0, 0, true,  false, false, m68k_handle_fndecl_attribute },
+  { "iocscall", 0, 1, false, false, false, m68k_handle_fndecl_attribute },
   { NULL,                0, 0, false, false, false, NULL }
 };
 
@@ -821,7 +824,28 @@ m68k_get_function_kind (tree func)
   if (a != NULL_TREE)
     return m68k_fk_interrupt_thread;
 
+  if (TARGET_IOCSCALL_DECL_ATTRIBUTE)
+  {
+    a = lookup_attribute ("iocscall", DECL_ATTRIBUTES (func));
+    if (a != NULL_TREE)
+      return m68k_fk_iocscall;
+  }
+
   return m68k_fk_normal_function;
+}
+
+static unsigned long
+m68k_get_iocscall_level (tree argument)
+{
+  /* No argument is level 0 */
+  if (argument == NULL_TREE)
+    return 0;
+
+  /* Wrong value type */
+  if (TREE_CODE (TYPE_SIZE (argument)) != INTEGER_CST)
+    return 0;
+
+  return TREE_INT_CST_LOW (TREE_VALUE (argument));
 }
 
 /* Handle an attribute requiring a FUNCTION_DECL; arguments as in
@@ -864,6 +888,7 @@ m68k_compute_frame_layout (void)
     m68k_get_function_kind (current_function_decl);
   bool interrupt_handler = func_kind == m68k_fk_interrupt_handler;
   bool interrupt_thread = func_kind == m68k_fk_interrupt_thread;
+  bool iocscall = func_kind == m68k_fk_iocscall;
 
   /* Only compute the frame once per function.
      Don't cache information until reload has been completed.  */
@@ -876,7 +901,7 @@ m68k_compute_frame_layout (void)
   mask = saved = 0;
 
   /* Interrupt thread does not need to save any register.  */
-  if (!interrupt_thread)
+  if (!interrupt_thread && !iocscall)
     for (regno = 0; regno < 16; regno++)
       if (m68k_save_reg (regno, interrupt_handler))
 	{
@@ -892,7 +917,7 @@ m68k_compute_frame_layout (void)
   if (TARGET_HARD_FLOAT)
     {
       /* Interrupt thread does not need to save any register.  */
-      if (!interrupt_thread)
+      if (!interrupt_thread && !iocscall)
 	for (regno = 16; regno < 24; regno++)
 	  if (m68k_save_reg (regno, interrupt_handler))
 	    {
@@ -1507,11 +1532,40 @@ m68k_ok_for_sibcall_p (tree decl, tree exp)
 /* On the m68k all args are always pushed.  */
 
 static rtx
-m68k_function_arg (CUMULATIVE_ARGS *cum ATTRIBUTE_UNUSED,
+m68k_function_arg (CUMULATIVE_ARGS *cum,
 		   enum machine_mode mode ATTRIBUTE_UNUSED,
-		   const_tree type ATTRIBUTE_UNUSED,
+		   const_tree type,
 		   bool named ATTRIBUTE_UNUSED)
 {
+  if (m68k_get_function_kind (current_function_decl)
+      == m68k_fk_iocscall)
+    {
+      int regno;
+      tree func, attr;
+      unsigned long level;
+
+      attr = DECL_ATTRIBUTES (current_function_decl);
+      func = lookup_attribute ("iocscall", attr);
+      level = m68k_get_iocscall_level (TREE_VALUE (func));
+
+      if (POINTER_TYPE_P (type))
+        {
+          if (cum->a_regno + level >= 6)
+	    return NULL_RTX;
+
+          regno = A1_REG + level + cum->a_regno++;
+	}
+      else
+        {
+	  if ((cum->d_regno + level) >= 7)
+	    return NULL_RTX;
+
+          regno = D1_REG + level + cum->d_regno++;
+	}
+    
+      return gen_rtx_REG (mode, regno);
+    }
+
   return NULL_RTX;
 }
 
@@ -1519,7 +1573,7 @@ static void
 m68k_function_arg_advance (CUMULATIVE_ARGS *cum, enum machine_mode mode,
 			   const_tree type, bool named ATTRIBUTE_UNUSED)
 {
-  *cum += (mode != BLKmode
+  cum->bytes += (mode != BLKmode
 	   ? (GET_MODE_SIZE (mode) + 3) & ~3
 	   : (int_size_in_bytes (type) + 3) & ~3);
 }

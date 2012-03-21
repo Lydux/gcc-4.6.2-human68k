@@ -43,3 +43,5 @@ along with GCC; see the file COPYING3.  If not see
 #undef USER_LABEL_PREFIX
 #define USER_LABEL_PREFIX ""
 
+#define TARGET_IOCSCALL_DECL_ATTRIBUTE 1
+
