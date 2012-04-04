@@ -532,19 +532,23 @@ extern enum reg_class regno_reg_class[];
 /* On the m68k, all arguments are usually pushed on the stack.  */
 #define FUNCTION_ARG_REGNO_P(N) 0
 
-/* On the m68k, this is a single integer, which is a number of bytes
-   of arguments scanned so far.  */
+/* IOCScall abi specific values */
+#define IOCSCALL_MAX_LEVEL	5
+
 typedef struct m68k_args {
   int bytes;			/* Number of bytes used in the stack */
+  /* Starting A and D regs when using IOCScall */
+  int iocscall;
+  int level;
   int a_regno;			/* Next available address register */
   int d_regno;			/* Next available data register */
+
 } CUMULATIVE_ARGS;
 
 /* On the m68k, the offset starts at 0.  */
-#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, INDIRECT, N_NAMED_ARGS) \
- CUM.bytes = 0; \
- CUM.a_regno = 0; \
- CUM.d_regno = 0;
+#define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, FNDECL, N_NAMED_ARGS) \
+ init_cumulative_args (&(CUM), (FNTYPE), (LIBNAME), (FNDECL), \
+                       (N_NAMED_ARGS) != -1)
 
 #define FUNCTION_PROFILER(FILE, LABELNO)  \
   asm_fprintf (FILE, "\tlea %LLP%d,%Ra0\n\tjsr mcount\n", (LABELNO))

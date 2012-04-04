@@ -68,6 +68,9 @@ extern int emit_move_sequence (rtx *, enum machine_mode, rtx);
 extern bool m68k_movem_pattern_p (rtx, rtx, HOST_WIDE_INT, bool);
 extern const char *m68k_output_movem (rtx *, rtx, HOST_WIDE_INT, bool);
 extern void m68k_final_prescan_insn (rtx, rtx *, int);
+#ifdef TREE_CODE
+extern void init_cumulative_args (CUMULATIVE_ARGS *, tree, rtx, tree, int);
+#endif  /* TREE_CODE  */
 
 /* Functions from m68k.c used in constraints.md.  */
 extern rtx m68k_unwrap_symbol (rtx, bool);
