@@ -1580,7 +1580,7 @@ m68k_ok_for_sibcall_p (tree decl, tree exp)
 
 static rtx
 m68k_function_arg (CUMULATIVE_ARGS *cum,
-		   enum machine_mode mode ATTRIBUTE_UNUSED,
+		   enum machine_mode mode,
 		   const_tree type,
 		   bool named ATTRIBUTE_UNUSED)
 {
@@ -1588,6 +1588,13 @@ m68k_function_arg (CUMULATIVE_ARGS *cum,
     {
       int regno;
       unsigned long level;
+      int opsize;
+
+      /* For 64bits wide integer arguments : Calculate how many data regs
+       * we need.*/
+      opsize = (mode != BLKmode
+             ? (GET_MODE_SIZE (mode) + 3) & ~3
+	     : (int_size_in_bytes (type) + 3) & ~3) / 4;
 
       level = m68k_get_iocscall_level (type, current_function_decl);
 
@@ -1596,14 +1603,17 @@ m68k_function_arg (CUMULATIVE_ARGS *cum,
           if (cum->a_regno + level >= 6)
 	    return NULL_RTX;
 
+          /* XXX: Does iocscall level apply to address registers ? */
           regno = A1_REG + level + cum->a_regno++;
 	}
       else
         {
-	  if ((cum->d_regno + level) >= 7)
+	  if ((cum->d_regno + level + opsize) > 7)
+	    /* No more regs, push to stack */
 	    return NULL_RTX;
 
-          regno = D1_REG + level + cum->d_regno++;
+          regno = D1_REG + level + cum->d_regno;
+          cum->d_regno += opsize;
 	}
     
       return gen_rtx_REG (mode, regno);
