@@ -146,7 +146,7 @@ static tree m68k_handle_fndecl_attribute (tree *node, tree name,
 					  tree args, int flags,
 					  bool *no_add_attrs);
 static void m68k_compute_frame_layout (void);
-static bool m68k_save_reg (unsigned int regno, bool interrupt_handler);
+static bool m68k_save_reg (unsigned int regno, bool saveall);
 static bool m68k_ok_for_sibcall_p (tree, tree);
 static bool m68k_tls_symbol_p (rtx);
 static rtx m68k_legitimize_address (rtx, rtx, enum machine_mode);
@@ -309,6 +309,7 @@ static const struct attribute_spec m68k_attribute_table[] =
   { "interrupt_handler", 0, 0, true,  false, false, m68k_handle_fndecl_attribute },
   { "interrupt_thread", 0, 0, true,  false, false, m68k_handle_fndecl_attribute },
   { "iocscall", 0, 1, false, false, false, m68k_handle_fndecl_attribute },
+  { "saveall", 0, 0, true, false, false, m68k_handle_fndecl_attribute },
   { NULL,                0, 0, false, false, false, NULL }
 };
 
@@ -824,6 +825,10 @@ m68k_get_function_kind (tree func)
   if (a != NULL_TREE)
     return m68k_fk_interrupt_thread;
 
+  a = lookup_attribute ("saveall", DECL_ATTRIBUTES (func));
+  if (a != NULL_TREE)
+    return m68k_fk_saveall;
+
   if (TARGET_IOCSCALL_DECL_ATTRIBUTE)
   {
     a = lookup_attribute ("iocscall", DECL_ATTRIBUTES (func));
@@ -936,6 +941,7 @@ m68k_compute_frame_layout (void)
     m68k_get_function_kind (current_function_decl);
   bool interrupt_handler = func_kind == m68k_fk_interrupt_handler;
   bool interrupt_thread = func_kind == m68k_fk_interrupt_thread;
+  bool saveall = func_kind == m68k_fk_saveall;
 
   /* Only compute the frame once per function.
      Don't cache information until reload has been completed.  */
@@ -950,7 +956,7 @@ m68k_compute_frame_layout (void)
   /* Interrupt thread does not need to save any register.  */
   if (!interrupt_thread)
     for (regno = 0; regno < 16; regno++)
-      if (m68k_save_reg (regno, interrupt_handler))
+      if (m68k_save_reg (regno, interrupt_handler || saveall))
 	{
 	  mask |= 1 << (regno - D0_REG);
 	  saved++;
@@ -966,7 +972,7 @@ m68k_compute_frame_layout (void)
       /* Interrupt thread does not need to save any register.  */
       if (!interrupt_thread)
 	for (regno = 16; regno < 24; regno++)
-	  if (m68k_save_reg (regno, interrupt_handler))
+	  if (m68k_save_reg (regno, interrupt_handler || saveall))
 	    {
 	      mask |= 1 << (regno - FP0_REG);
 	      saved++;
@@ -1021,7 +1027,7 @@ m68k_initial_elimination_offset (int from, int to)
    Return true if we need to save REGNO.  */
 
 static bool
-m68k_save_reg (unsigned int regno, bool interrupt_handler)
+m68k_save_reg (unsigned int regno, bool saveall)
 {
   if (flag_pic && regno == PIC_REG)
     {
@@ -1060,8 +1066,10 @@ m68k_save_reg (unsigned int regno, bool interrupt_handler)
     return false;
 
   /* Interrupt handlers must also save call_used_regs
-     if they are live or when calling nested functions.  */
-  if (interrupt_handler)
+     if they are live or when calling nested functions.  
+     (saveall as well)
+   */
+  if (saveall)
     {
       if (df_regs_ever_live_p (regno))
 	return true;
@@ -5325,13 +5333,16 @@ m68k_hard_regno_rename_ok (unsigned int old_reg ATTRIBUTE_UNUSED,
 			   unsigned int new_reg)
 {
 
-  /* Interrupt functions can only use registers that have already been
-     saved by the prologue, even if they would normally be
+  /* Interrupt functions (saveall too) can only use registers that have 
+     already been saved by the prologue, even if they would normally be
      call-clobbered.  */
+  enum m68k_function_kind func_kind =
+    m68k_get_function_kind (current_function_decl);
+  bool saveall = 
+    (func_kind == m68k_fk_interrupt_handler) ||
+    (func_kind == m68k_fk_saveall);
 
-  if ((m68k_get_function_kind (current_function_decl)
-       == m68k_fk_interrupt_handler)
-      && !df_regs_ever_live_p (new_reg))
+  if (saveall && !df_regs_ever_live_p (new_reg))
     return 0;
 
   return 1;
@@ -6720,6 +6731,23 @@ m68k_conditional_register_usage (void)
     }
   if (flag_pic)
     fixed_regs[PIC_REG] = call_used_regs[PIC_REG] = 1;
+}
+
+/* EPILOGUE_USES implementation */
+bool
+m68k_epilogue_uses (unsigned int regno)
+{
+  enum m68k_function_kind func_kind =
+    m68k_get_function_kind (current_function_decl);
+	  
+  if (!reload_completed)
+    return 0;
+
+  if ((func_kind == m68k_fk_interrupt_handler) ||
+      (func_kind == m68k_fk_saveall))
+    return 1;
+
+  return 0;
 }
 
 #include "gt-m68k.h"

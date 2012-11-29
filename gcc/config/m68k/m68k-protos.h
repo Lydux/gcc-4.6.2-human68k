@@ -103,3 +103,4 @@ extern void init_68881_table (void);
 extern rtx m68k_legitimize_call_address (rtx);
 extern rtx m68k_legitimize_sibcall_address (rtx);
 extern int m68k_hard_regno_rename_ok(unsigned int, unsigned int);
+extern bool m68k_epilogue_uses (unsigned int);

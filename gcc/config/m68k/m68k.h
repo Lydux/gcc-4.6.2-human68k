@@ -826,10 +826,7 @@ do { if (cc_prev_status.flags & CC_IN_68881)			\
 #define INCOMING_FRAME_SP_OFFSET 4
 
 /* All registers are live on exit from an interrupt routine.  */
-#define EPILOGUE_USES(REGNO)					\
-  (reload_completed						\
-   && (m68k_get_function_kind (current_function_decl)	\
-       == m68k_fk_interrupt_handler))
+#define EPILOGUE_USES(REGNO)	m68k_epilogue_uses(REGNO)
 
 /* Describe how we implement __builtin_eh_return.  */
 #define EH_RETURN_DATA_REGNO(N) \
@@ -1011,7 +1008,8 @@ enum m68k_function_kind
   m68k_fk_normal_function,
   m68k_fk_interrupt_handler,
   m68k_fk_interrupt_thread,
-  m68k_fk_iocscall
+  m68k_fk_iocscall,
+  m68k_fk_saveall
 };
 
 /* Variables in m68k.c; see there for details.  */
